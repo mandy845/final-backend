@@ -132,7 +132,7 @@ def create_chores():
         email_address = request.json['email_address']
         date = request.json["scheduled_date"]
         time = request.json["scheduled_time"]
-        print("fdgdhgjkh")
+
 
         with sqlite3.connect('list.db') as conn:
             cursor = conn.cursor()
@@ -148,13 +148,13 @@ def create_chores():
             return response
 
 
-# getting chores added by id
+# getting chores added 
 @app.route('/get-chores/', methods=["GET"])
 def get_chore():
     response = {}
     with sqlite3.connect("list.db") as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM to-do list")
+        cursor.execute("SELECT * FROM to_do_list")
         chores = cursor.fetchall()
 
         response['status_code'] = 200
