@@ -54,8 +54,8 @@ def init_schedule_table():
                      "Name TEXT NOT NULL,"
                      "type_of_chores TEXT NOT NULL, "
                      "Email_address TEXT,"
-                     "schedule_time TEXT,"
-                     "schedule_date TEXT)")
+                     "scheduled_time TEXT,"
+                     "scheduled_date TEXT)")
     print("schedule table created successfully.")
 
 
@@ -121,113 +121,114 @@ def user_registration():
         return response
 
 #  creating the scheduled chores
-    @app.route('/create-chores/', methods=["POST"])
-    def create_products():
-        response = {}
 
-        if request.method == "POST":
-            Name = request.json['Name']
-            types_of_chores = request.json['types_of_chores']
-            email_address = request.json['email_address']
-            date = request.json["scheduled_date"]
-            time = request.json["scheduled_time"]
 
-            with sqlite3.connect('online.db') as conn:
-                cursor = conn.cursor()
-                cursor.execute("INSERT INTO to_do_list("
-                               "Name,"
-                               "types_of_chores,"
-                               "email_address,"
-                               "scheduled_date,"
-                               "scheduled_time) VALUES(?, ?, ?, ?, ?)", (Name, types_of_chores, email_address, date, time))
-                conn.commit()
-                response["status_code"] = 201
-                response['description'] = "to-do list added successfully"
-            return response
-# getting chores added by id
+@app.route('/create-chores/', methods=["POST"])
+def create_chores():
+    response = {}
+    if request.method == "POST":
+        Name = request.json['Name']
+        types_of_chores = request.json['type_of_chores']
+        email_address = request.json['email_address']
+        date = request.json["scheduled_date"]
+        time = request.json["scheduled_time"]
+        print("fdgdhgjkh")
 
-    @app.route('/get-chores/', methods=["GET"])
-    def get_chore():
-        response = {}
-        with sqlite3.connect("list.db") as conn:
+        with sqlite3.connect('list.db') as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM to-do list")
-            chores = cursor.fetchall()
-
-            response['status_code'] = 200
-            response['data'] = chores
+            cursor.execute("INSERT INTO to_do_list("
+                           "Name,"
+                           "type_of_chores,"
+                           "email_address,"
+                           "scheduled_date,"
+                           "scheduled_time) VALUES(?, ?, ?, ?, ?)", (Name, types_of_chores, email_address, date, time))
+            conn.commit()
+            response["status_code"] = 201
+            response['description'] = "to-do list added successfully"
             return response
+
+
+# getting chores added by id
+@app.route('/get-chores/', methods=["GET"])
+def get_chore():
+    response = {}
+    with sqlite3.connect("list.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM to-do list")
+        chores = cursor.fetchall()
+
+        response['status_code'] = 200
+        response['data'] = chores
+        return response
+
 
 # Deleting chores by id
 
-    @app.route("/delete-chores/<int:chores_id>")
-    def delete_chores(chores_id):
-        response = {}
-        with sqlite3.connect("list.db") as conn:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM to-do list WHERE id=" + str(chores_id))
-            conn.commit()
-            response['status_code'] = 200
-            response['message'] = "chore list deleted successfully."
+@app.route("/delete-chores/<int:chores_id>")
+def delete_chores(chores_id):
+    response = {}
+    with sqlite3.connect("list.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM to-do list WHERE id=" + str(chores_id))
+        conn.commit()
+        response['status_code'] = 200
+        response['message'] = "chore list deleted successfully."
         return response
+
+
 # editing the chores list by id
 
-    @app.route('/edit-chores/<int:chores_id>/', methods=["PUT"])
-    def edit_chores(chores_id):
-        response = {}
+@app.route('/edit-chores/<int:chores_id>/', methods=["PUT"])
+def edit_chores(chores_id):
+    response = {}
+    if request.method == "PUT":
+        with sqlite3.connect('list.db') as conn:
+            incoming_data = dict(request.json)
+            put_data = {}
 
-        if request.method == "PUT":
-            with sqlite3.connect('list.db') as conn:
-                incoming_data = dict(request.json)
-                put_data = {}
+            if incoming_data.get("name") is not None:
+                put_data["name"] = incoming_data.get("name")
+                with sqlite3.connect('list.db') as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("UPDATE To-do list SET name =? WHERE id=?", (put_data["name"], chores_id))
+                    conn.commit()
+                    response['message'] = "Update was successful"
+                    response['status_code'] = 200
+                    if incoming_data.get("name") is not None:
+                        put_data['name'] = incoming_data.get('name')
+                        with sqlite3.connect('list.db') as conn:
+                            cursor = conn.cursor()
+                            cursor.execute("UPDATE To-do list SET name =? WHERE id=?", (put_data["name"], chores_id))
+                            conn.commit()
+                            response["name"] = " Name updated successfully"
+                            response["status_code"] = 200
+                            return response
 
-                if incoming_data.get("name") is not None:
-                    put_data["name"] = incoming_data.get("name")
-                    with sqlite3.connect('list.db') as conn:
-                        cursor = conn.cursor()
-                        cursor.execute("UPDATE To-do list SET name =? WHERE id=?", (put_data["name"], chores_id))
-                        conn.commit()
-                        response['message'] = "Update was successful"
-                        response['status_code'] = 200
-                if incoming_data.get("name") is not None:
-                    put_data['name'] = incoming_data.get('name')
 
-                    with sqlite3.connect('list.db') as conn:
-                        cursor = conn.cursor()
-                        cursor.execute("UPDATE To-do list SET name =? WHERE id=?", (put_data["name"], chores_id))
-                        conn.commit()
-
-                        response["name"] = " Name updated successfully"
-                        response["status_code"] = 200
-        return response
 # filtering chores by the type of chores
 
-    @app.route('/filter-product/<type>/', methods=["GET"])
-    def filter_product(type_of_chores):
-        response = {}
-        with sqlite3.connect("list.db") as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM To-do list WHERE type_of_chores LIKE '%" + type_of_chores + "%'")
-
-            posts = cursor.fetchall()
-
+@app.route('/filter-product/<type>/', methods=["GET"])
+def filter_product(type_of_chores):
+    response = {}
+    with sqlite3.connect("list.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM To-do list WHERE type_of_chores LIKE '%" + type_of_chores + "%'")
+        posts = cursor.fetchall()
         response['status_code'] = 200
         response['data'] = posts
         return jsonify(response)
 
+
 # getting chores by the id
-    @app.route('/get-chores/<int:chores_id>/', methods=["GET"])
-    def get_product(chores_id):
-        response = {}
-
-        with sqlite3.connect("online.db") as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM To-do list WHERE id=" + str(chores_id))
-
-            response["status_code"] = 200
-            response["description"] = "chores  retrieved successfully"
-            response["data"] = cursor.fetchone()
-
+@app.route('/get-chores/<int:chores_id>/', methods=["GET"])
+def get_product(chores_id):
+    response = {}
+    with sqlite3.connect("online.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM To-do list WHERE id=" + str(chores_id))
+        response["status_code"] = 200
+        response["description"] = "chores  retrieved successfully"
+        response["data"] = cursor.fetchone()
         return jsonify(response)
 
 
