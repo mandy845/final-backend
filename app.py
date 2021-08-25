@@ -133,7 +133,6 @@ def create_chores():
         date = request.json["scheduled_date"]
         time = request.json["scheduled_time"]
 
-
         with sqlite3.connect('list.db') as conn:
             cursor = conn.cursor()
             cursor.execute("INSERT INTO to_do_list("
