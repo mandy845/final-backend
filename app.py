@@ -168,7 +168,7 @@ def delete_chores(chores_id):
     response = {}
     with sqlite3.connect("list.db") as conn:
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM to-do list WHERE id=" + str(chores_id))
+        cursor.execute("DELETE FROM to_do_list WHERE id=" + str(chores_id))
         conn.commit()
         response['status_code'] = 200
         response['message'] = "chore list deleted successfully."
