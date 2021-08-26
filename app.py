@@ -6,6 +6,7 @@ from flask_cors import CORS
 
 from flask import Flask, request, jsonify
 from flask_jwt import JWT, jwt_required, current_identity
+from flask_mail import Message, Mail
 
 
 class User(object):
@@ -84,8 +85,18 @@ app = Flask(__name__)
 app.debug = True
 app.config['SECRET_KEY'] = 'super-secret'
 
-
 jwt = JWT(app, authenticate, identity)
+
+#   CONFIGURATIONS FOR THE MAIL AND APP TO WORK
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USE_TLS'] = False
+# app.config['SECRET_KEY'] = "super-secret"
+app.config['MAIL_SERVER'] = "smtp.gmail.com"
+app.config['MAIL_PASSWORD'] = "@manda20W"
+app.config['MAIL_USERNAME'] = "amandamakara7@gmail.com"
+
+mail = Mail(app)
 
 
 @app.route('/protected')
@@ -114,11 +125,13 @@ def user_registration():
                            "last_name,"
                            "email_address,"
                            "username,"
-                           "password) VALUES(?, ?, ?, ?,?)", (first_name, last_name, email_address, username, password))
+                           "password) VALUES(?, ?, ?, ?, ?)", (first_name, last_name, email_address, username, password))
             conn.commit()
             response["message"] = "success"
             response["status_code"] = 201
-        return response
+            send_email(email_address, first_name)
+
+        return "Email sent"
 
 #  creating the scheduled chores
 
@@ -229,6 +242,39 @@ def get_product(chores_id):
         response["description"] = "chores  retrieved successfully"
         response["data"] = cursor.fetchone()
         return jsonify(response)
+
+
+def remind_user():
+    date_1 = datetime.datetime(2021, 7, 26, 21, 25, 0)
+    date_2 = datetime.datetime(2021, 7, 24, 21, 59, 0)
+
+    # Get interval between two datetimes as timedelta object
+    diff = date_2 - date_1
+
+    # Get the interval in minutes
+    diff_in_minutes = diff.total_seconds() / 60
+
+    print('Difference between two datetimes in minutes:')
+    print(diff_in_minutes)
+
+    if diff_in_minutes <= 30:
+        print("about to send.")
+        send_email("amandamakara7@gmail.com", "Amanda")
+
+
+#   FUNCTION WILL SEND AN EMAIL TO THE PROVIDED email_address
+
+def send_email(email_address, first_name):
+    email_to_send = Message('Welcome to the keep your schedule on time (to-do list).', sender='amandamakara7@gmail.com',
+                            recipients=[email_address])
+    email_to_send.body = f"Congratulations {first_name} on a successful registration. \n\n" \
+                         f"Welcome to keep your schedule on time (to-do list)." \
+                         f" family, browse around and make sure to enjoy the " \
+                         f"experience. "
+    mail.send(email_to_send)
+
+
+# remind_user()
 
 
 if __name__ == "__main__":
