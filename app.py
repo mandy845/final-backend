@@ -44,7 +44,9 @@ def fetch_users():
         new_data = []
 
         for data in users:
-            new_data.append(User(data[0], data[3], data[4], data[5]))
+
+            print(data)
+            new_data.append(User(data[0], data[4], data[3], data[5]))
     return new_data
 
 
@@ -129,7 +131,8 @@ def user_registration():
             conn.commit()
             response["message"] = "success"
             response["status_code"] = 201
-            send_email(email_address, first_name)
+            print(email_address, first_name)
+            send_email("thank you for using our to-do list", "welcome we are here to help with your schedule ", email_address)
 
         return "Email sent"
 
@@ -151,7 +154,7 @@ def create_chores():
             cursor.execute("INSERT INTO to_do_list("
                            "Name,"
                            "type_of_chores,"
-                           "email_address,"
+                           "email_address,"  
                            "scheduled_date,"
                            "scheduled_time) VALUES(?, ?, ?, ?, ?)", (Name, types_of_chores, email_address, date, time))
             conn.commit()
@@ -219,7 +222,7 @@ def edit_chores(chores_id):
 
 # filtering chores by the type of chores
 
-@app.route('/filter-product/<type>/', methods=["GET"])
+@app.route('/filter-product/<type_of_chores>/', methods=["GET"])
 def filter_product(type_of_chores):
     response = {}
     with sqlite3.connect("list.db") as conn:
@@ -241,17 +244,53 @@ def get_product(chores_id):
         response["status_code"] = 200
         response["description"] = "chores  retrieved successfully"
         response["data"] = cursor.fetchone()
-        return jsonify(response)
+    return jsonify(response)
+
+
+@app.route('/send-email/<int:user_id>/', methods=["POST"])
+def reminder_email(user_id):
+    print(user_id)
+    response = {}
+    with sqlite3.connect("list.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM user WHERE user_id='{user_id}'")
+        user = cursor.fetchone()
+
+    print(user)
+
+    first_name = user[1] + user[2]
+    email = user[3]
+    print(email)
+    with sqlite3.connect("list.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM to_do_list WHERE email_address='{email}'")
+        chores = cursor.fetchone()
+
+        print(chores)
+        print(chores[2])
+        print(chores[4])
+        print(chores[5])
+
+        types_of_chores = chores[2]
+        time = chores[4]
+        date = chores[5]
+
+        send_email("you successfully added your schedule", "hey "
+                   + first_name + " here is your Schedule " +
+                   types_of_chores + " at " + time + " on the " + date, email)
+        response["status_code"] = 200
+        response["description"] = "chores  sent successfully"
+    return jsonify(response)
 
 
 def remind_user():
-    date_1 = datetime.datetime(2021, 7, 26, 21, 25, 0)
-    date_2 = datetime.datetime(2021, 7, 24, 21, 59, 0)
+    date_1 = datetime.datetime(2021, 7, 26, 0, 5, 0)
+    date_2 = datetime.datetime(2021, 7, 24, 0, 5, 0)
 
-    # Get interval between two datetimes as timedelta object
+# Get interval between two datetimes as timedelta object
     diff = date_2 - date_1
 
-    # Get the interval in minutes
+# Get the interval in minutes
     diff_in_minutes = diff.total_seconds() / 60
 
     print('Difference between two datetimes in minutes:')
@@ -259,18 +298,15 @@ def remind_user():
 
     if diff_in_minutes <= 30:
         print("about to send.")
-        send_email("amandamakara7@gmail.com", "Amanda")
+        send_email('Welcome to the keep your schedule on time (to-do list).', "amandamakara7@gmail.com", "Amanda")
 
 
 #   FUNCTION WILL SEND AN EMAIL TO THE PROVIDED email_address
 
-def send_email(email_address, first_name):
-    email_to_send = Message('Welcome to the keep your schedule on time (to-do list).', sender='amandamakara7@gmail.com',
+def send_email(subject, message, email_address):
+    email_to_send = Message(subject, sender='amandamakara7@gmail.com',
                             recipients=[email_address])
-    email_to_send.body = f"Congratulations {first_name} on a successful registration. \n\n" \
-                         f"Welcome to keep your schedule on time (to-do list)." \
-                         f" family, browse around and make sure to enjoy the " \
-                         f"experience. "
+    email_to_send.body = message
     mail.send(email_to_send)
 
 
