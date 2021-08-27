@@ -100,6 +100,12 @@ app.config['MAIL_USERNAME'] = "amandamakara7@gmail.com"
 
 mail = Mail(app)
 
+@app.route('/')
+def welcome():
+    response = {}
+    response["message"] = "Hello"
+    response["status_code"] = 200
+    return response
 
 @app.route('/protected')
 @jwt_required()
@@ -129,12 +135,12 @@ def user_registration():
                            "username,"
                            "password) VALUES(?, ?, ?, ?, ?)", (first_name, last_name, email_address, username, password))
             conn.commit()
-            response["message"] = "success"
+            response["message"] = "Successfully registered. Please check your email for more info"
             response["status_code"] = 201
             print(email_address, first_name)
             send_email("thank you for using our to-do list", "welcome we are here to help with your schedule ", email_address)
 
-        return "Email sent"
+        return response
 
 #  creating the scheduled chores
 
@@ -247,6 +253,7 @@ def get_product(chores_id):
     return jsonify(response)
 
 
+# the email will be sent to the user with the chores they added and scheduled time with the date
 @app.route('/send-email/<int:user_id>/', methods=["POST"])
 def reminder_email(user_id):
     print(user_id)
