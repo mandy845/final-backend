@@ -253,6 +253,18 @@ def get_product(chores_id):
     return jsonify(response)
 
 
+@app.route('/get-userlogin/<int:user_id>/', methods=["GET"])
+def get_user(user_id):
+    response = {}
+    with sqlite3.connect("online.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM user WHERE user_id='{user_id}'")
+        response["status_code"] = 200
+        response["description"] = "chores  retrieved successfully"
+        response["data"] = cursor.fetchone()
+    return jsonify(response)
+
+
 # the email will be sent to the user with the chores they added and scheduled time with the date
 @app.route('/send-email/<int:user_id>/', methods=["POST"])
 def reminder_email(user_id):
