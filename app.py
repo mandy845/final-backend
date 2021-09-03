@@ -108,7 +108,6 @@ def welcome():
     return response
 
 @app.route('/protected')
-@jwt_required()
 def protected():
     return '%s' % current_identity
 
