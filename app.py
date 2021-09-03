@@ -138,7 +138,7 @@ def user_registration():
             response["message"] = "Successfully registered. Please check your email for more info"
             response["status_code"] = 201
             print(email_address, first_name)
-            # send_email("thank you for using our to-do list", "welcome we are here to help with your schedule ", email_address)
+            send_email("thank you for using our to-do list", "welcome we are here to help with your schedule ", email_address)
 
         return response
 
