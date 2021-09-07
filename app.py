@@ -1,6 +1,9 @@
 import hmac
+import smtplib
 import sqlite3
 import datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from flask_cors import CORS
 
@@ -95,10 +98,11 @@ app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USE_TLS'] = False
 # app.config['SECRET_KEY'] = "super-secret"
 app.config['MAIL_SERVER'] = "smtp.gmail.com"
-app.config['MAIL_PASSWORD'] = "@manda20W"
-app.config['MAIL_USERNAME'] = "amandamakara7@gmail.com"
+app.config['MAIL_PASSWORD'] = "manda21B"
+app.config['MAIL_USERNAME'] = "listtodo06@gmail.com"
 
 mail = Mail(app)
+
 
 @app.route('/')
 def welcome():
@@ -106,6 +110,7 @@ def welcome():
     response["message"] = "Hello"
     response["status_code"] = 200
     return response
+
 
 @app.route('/protected')
 def protected():
@@ -267,38 +272,57 @@ def get_user(user_id):
 # the email will be sent to the user with the chores they added and scheduled time with the date
 @app.route('/send-email/<int:user_id>/', methods=["POST"])
 def reminder_email(user_id):
-    print(user_id)
-    response = {}
-    with sqlite3.connect("list.db") as conn:
-        cursor = conn.cursor()
-        cursor.execute(f"SELECT * FROM user WHERE user_id='{user_id}'")
-        user = cursor.fetchone()
+    try:
+        print(user_id)
+        response = {}
+        with sqlite3.connect("list.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT * FROM user WHERE user_id='{user_id}'")
+            user = cursor.fetchone()
+            print(user)
 
-    print(user)
+            first_name = user[1] + user[2]
+            email = user[3]
+            print(email)
+        with sqlite3.connect("list.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT * FROM to_do_list WHERE email_address='{email}'")
+            chores = cursor.fetchone()
 
-    first_name = user[1] + user[2]
-    email = user[3]
-    print(email)
-    with sqlite3.connect("list.db") as conn:
-        cursor = conn.cursor()
-        cursor.execute(f"SELECT * FROM to_do_list WHERE email_address='{email}'")
-        chores = cursor.fetchone()
+            print(chores)
+            print(chores[2])
+            print(chores[4])
+            print(chores[5])
 
-        print(chores)
-        print(chores[2])
-        print(chores[4])
-        print(chores[5])
-
-        types_of_chores = chores[2]
-        time = chores[4]
-        date = chores[5]
-
-        send_email("you successfully added your schedule", "hey "
-                   + first_name + " here is your Schedule " +
-                   types_of_chores + " at " + time + " on the " + date, email)
+            types_of_chores = chores[2]
+            time = chores[4]
+            date = chores[5]
+            send_email("you successfully added your schedule", "hey "
+                       + first_name + " here is your Schedule " +
+                       types_of_chores + " at " + time + " on the " + date, email)
+            sender_email_id = email
+            receiver_email_id = email
+            password = "manda21B"
+            subject = "welcome we promise to keep you in time with your work"
+            msg = MIMEMultipart()
+            msg['From'] = sender_email_id
+            msg['To'] = receiver_email_id
+            msg['Subject'] = subject
+            body = f'welcome we promise to keep your work in time'
+            msg.attach(MIMEText('plain'))
+            text = msg.as_string()
+            s = smtplib.SMTP('smtp.gmail.com', 587)
+            s.starttls()
+            s.login(sender_email_id, password)
+            s.sendmail(sender_email_id, receiver_email_id, text)
+            s.quit()
+            response['message'] = "Successfully sent an email"
+    except:
+        response['message'] = "Invalid email"
+        return response
         response["status_code"] = 200
         response["description"] = "chores  sent successfully"
-    return jsonify(response)
+        return jsonify(response)
 
 
 def remind_user():
@@ -322,7 +346,7 @@ def remind_user():
 #   FUNCTION WILL SEND AN EMAIL TO THE PROVIDED email_address
 
 def send_email(subject, message, email_address):
-    email_to_send = Message(subject, sender='amandamakara7@gmail.com',
+    email_to_send = Message(subject, sender='listtodo06@gmail.com',
                             recipients=[email_address])
     email_to_send.body = message
     mail.send(email_to_send)
