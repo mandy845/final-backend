@@ -270,7 +270,7 @@ def get_user(user_id):
 
 
 # the email will be sent to the user with the chores they added and scheduled time with the date
-@app.route('/send-email/<int:user_id>/', methods=["POST"])
+@app.route('/send-email/<int:user_id>/', methods=["GET"])
 def reminder_email(user_id):
     try:
         print(user_id)
@@ -289,40 +289,42 @@ def reminder_email(user_id):
             cursor.execute(f"SELECT * FROM to_do_list WHERE email_address='{email}'")
             chores = cursor.fetchone()
 
-            print(chores)
-            print(chores[2])
-            print(chores[4])
-            print(chores[5])
+
 
             types_of_chores = chores[2]
             time = chores[4]
             date = chores[5]
-            send_email("you successfully added your schedule", "hey "
-                       + first_name + " here is your Schedule " +
-                       types_of_chores + " at " + time + " on the " + date, email)
-            sender_email_id = email
-            receiver_email_id = email
+            # send_email("you successfully added your schedule", "hey "
+            #            + first_name + " here is your Schedule " +
+            #            types_of_chores + " at " + time + " on the " + date, email)
+            sender_email_id = "listtodo06@gmail.com"
+            receiver_email_id = "amandamakara7@gmail.com"
             password = "manda21B"
             subject = "welcome we promise to keep you in time with your work"
             msg = MIMEMultipart()
+
             msg['From'] = sender_email_id
             msg['To'] = receiver_email_id
             msg['Subject'] = subject
             body = f'welcome we promise to keep your work in time'
             msg.attach(MIMEText('plain'))
+
             text = msg.as_string()
             s = smtplib.SMTP('smtp.gmail.com', 587)
+
             s.starttls()
             s.login(sender_email_id, password)
+            print("its working")
             s.sendmail(sender_email_id, receiver_email_id, text)
             s.quit()
             response['message'] = "Successfully sent an email"
-    except:
+            response["status_code"] = 200
+            response["description"] = "chores  sent successfully"
+    except Exception as e:
+        s = str(e)
         response['message'] = "Invalid email"
-        return response
-        response["status_code"] = 200
-        response["description"] = "chores  sent successfully"
-        return jsonify(response)
+        response['message'] = s
+    return response
 
 
 def remind_user():
